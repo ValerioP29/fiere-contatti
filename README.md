@@ -23,9 +23,22 @@ composer install
 php artisan key:generate
 php artisan migrate --seed
 npm install
+```
+
+## Front-end (Tailwind + Vite)
+### Modalità DEV (con hot reload)
+```bash
+npm run dev
+php artisan serve
+```
+
+### Modalità build (senza dev server)
+```bash
 npm run build
 php artisan serve
 ```
+
+> In modalità build Laravel leggerà `public/build/manifest.json` e gli asset compilati in `public/build/assets`.
 
 ## Dati demo
 - email: `test@example.com`
