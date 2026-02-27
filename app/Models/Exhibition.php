@@ -16,6 +16,7 @@ class Exhibition extends Model
         'start_date',
         'end_date',
         'company',
+        'note',
         'public_token',
     ];
 
