@@ -17,18 +17,61 @@ class ExhibitionController extends Controller
     {
         $exhibitions = Exhibition::query()
             ->where('user_id', auth()->id())
-            ->orderByDesc('start_date')
-            ->orderByDesc('date')
-            ->paginate(20);
+            ->latest()
+            ->paginate(10);
 
         return view('exhibitions.index', compact('exhibitions'));
+    }
+
+    public function create(): View
+    {
+        return view('exhibitions.create');
+    }
+
+    public function show(Request $request, Exhibition $exhibition): View
+    {
+        $this->ensureOwnership($exhibition);
+
+        if (! $exhibition->public_token) {
+            $exhibition->update(['public_token' => (string) Str::ulid()]);
+            $exhibition->refresh();
+        }
+
+        $q = trim((string) $request->string('q'));
+
+        $contacts = $exhibition->contacts()
+            ->when($q !== '', function ($query) use ($q) {
+                $query->where(function ($qq) use ($q) {
+                    $qq->where('first_name', 'like', "%{$q}%")
+                        ->orWhere('last_name', 'like', "%{$q}%")
+                        ->orWhere('email', 'like', "%{$q}%")
+                        ->orWhere('phone', 'like', "%{$q}%")
+                        ->orWhere('company', 'like', "%{$q}%")
+                        ->orWhere('note', 'like', "%{$q}%");
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
+        $publicUrl = route('public.form', ['token' => $exhibition->public_token]);
+
+        return view('exhibitions.show', compact('exhibition', 'contacts', 'q', 'publicUrl'));
+    }
+
+    public function edit(Exhibition $exhibition): View
+    {
+        $this->ensureOwnership($exhibition);
+
+        return view('exhibitions.edit', compact('exhibition'));
     }
 
     public function store(StoreExhibitionRequest $request): RedirectResponse
     {
         Exhibition::create([
-            ...$this->normalizeDatePayload($request->validated()),
+            ...$this->normalizePayload($request->validated()),
             'user_id' => auth()->id(),
+            'public_token' => (string) Str::ulid(),
         ]);
 
         return redirect()->route('exhibitions.index')->with('status', 'Fiera creata.');
@@ -38,7 +81,7 @@ class ExhibitionController extends Controller
     {
         $this->ensureOwnership($exhibition);
 
-        $exhibition->update($this->normalizeDatePayload($request->validated()));
+        $exhibition->update($this->normalizePayload($request->validated()));
 
         return redirect()->route('exhibitions.index')->with('status', 'Fiera aggiornata.');
     }
@@ -65,16 +108,10 @@ class ExhibitionController extends Controller
         ]);
     }
 
-    private function normalizeDatePayload(array $data): array
+    private function normalizePayload(array $data): array
     {
-        if (! empty($data['date'])) {
-            $data['start_date'] = null;
-            $data['end_date'] = null;
-
-            return $data;
-        }
-
-        $data['date'] = $data['start_date'] ?? null;
+        $data['start_date'] = null;
+        $data['end_date'] = null;
 
         return $data;
     }

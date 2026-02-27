@@ -1,10 +1,5 @@
 @props(['title' => null])
 
-@php($title = $title)
-
-@extends('layouts.main')
-
-@section('content')
-@endsection
-
-{{ $slot }}
+<x-layouts.main :title="$title">
+    {{ $slot }}
+</x-layouts.main>

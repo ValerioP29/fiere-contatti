@@ -20,21 +20,7 @@
     </style>
 </head>
 <body class="bg-body-tertiary text-dark">
-<nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
-    <div class="container">
-        <a class="navbar-brand fw-semibold" href="{{ route('exhibitions.index') }}">Contatti fiere</a>
-
-        <div class="ms-auto d-flex gap-2 align-items-center">
-            @auth
-                <span class="text-secondary small d-none d-md-inline">{{ auth()->user()->email }}</span>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-ui/button type="submit" variant="outline-secondary" size="sm" icon="box-arrow-right">Logout</x-ui/button>
-                </form>
-            @endauth
-        </div>
-    </div>
-</nav>
+@include('layouts.navigation')
 
 <main class="container py-4">
     @if (session('status'))

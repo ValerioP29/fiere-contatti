@@ -15,10 +15,9 @@ class StoreExhibitionRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'date' => ['nullable', 'date', 'required_without:start_date'],
-            'start_date' => ['nullable', 'date', 'required_without:date'],
-            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'date' => ['nullable', 'date'],
             'company' => ['nullable', 'string', 'max:255'],
+            'note' => ['nullable', 'string', 'max:5000'],
         ];
     }
 }
