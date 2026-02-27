@@ -2,38 +2,40 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreContactRequest;
 use App\Models\Contact;
 use App\Models\Exhibition;
-use Illuminate\Http\Request;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\View\View;
 
 class PublicContactController extends Controller
 {
-    public function show(string $token)
+    public function show(string $token): View
     {
         $exhibition = Exhibition::where('public_token', $token)->firstOrFail();
+
         return view('public.form', compact('exhibition', 'token'));
     }
 
-    public function store(Request $request, string $token)
+    public function store(StoreContactRequest $request, string $token): RedirectResponse
     {
         $exhibition = Exhibition::where('public_token', $token)->firstOrFail();
 
-        $data = $request->validate([
-            'first_name' => ['required','string','max:255'],
-            'last_name'  => ['required','string','max:255'],
-            'email'      => ['nullable','email','max:255'],
-            'phone'      => ['nullable','string','max:50'],
-            'company'    => ['nullable','string','max:255'],
-            'note'       => ['nullable','string'],
-            'business_card' => ['nullable','file','max:5120','mimes:jpg,jpeg,png,pdf,webp'],
-        ]);
+        $data = $request->validated();
+        unset($data['contact_file']);
 
         $data['exhibition_id'] = $exhibition->id;
         $data['source'] = 'public';
 
-        if ($request->hasFile('business_card')) {
-            $data['business_card_path'] = $request->file('business_card')
-                ->store('business-cards', 'public');
+        if ($request->hasFile('contact_file')) {
+            $file = $request->file('contact_file');
+            $data = [
+                ...$data,
+                'file_path' => $file->store('contact-files'),
+                'file_original_name' => $file->getClientOriginalName(),
+                'file_mime' => $file->getClientMimeType(),
+                'file_size' => $file->getSize(),
+            ];
         }
 
         Contact::create($data);
@@ -41,9 +43,10 @@ class PublicContactController extends Controller
         return redirect()->route('public.thanks', ['token' => $token]);
     }
 
-    public function thanks(string $token)
+    public function thanks(string $token): View
     {
         $exhibition = Exhibition::where('public_token', $token)->firstOrFail();
+
         return view('public.thanks', compact('exhibition'));
     }
 }
