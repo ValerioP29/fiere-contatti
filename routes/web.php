@@ -46,14 +46,20 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/exhibitions/{exhibition}/contacts/{contact}', [ContactController::class, 'update'])->name('contacts.update');
     Route::delete('/exhibitions/{exhibition}/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
 
-    Route::get('/exhibitions/{exhibition}/contacts-export', [ContactController::class, 'exportCsv'])->name('contacts.export');
+    Route::get('/exhibitions/{exhibition}/contacts-export', [ContactController::class, 'exportExcel'])->name('contacts.export');
+    Route::get('/exhibitions/{exhibition}/contacts/{contact}/file/download', [ContactController::class, 'downloadFile'])
+        ->name('contacts.file.download');
+    Route::get('/exhibitions/{exhibition}/contacts/{contact}/file/preview', [ContactController::class, 'previewFile'])
+        ->name('contacts.file.preview');
 });
 
 /**
  * Rotte pubbliche per form via token
  */
 Route::get('/p/{token}', [PublicContactController::class, 'show'])->name('public.form');
-Route::post('/p/{token}', [PublicContactController::class, 'store'])->name('public.store');
+Route::post('/p/{token}', [PublicContactController::class, 'store'])
+    ->middleware('throttle:20,1')
+    ->name('public.store');
 Route::get('/p/{token}/thanks', [PublicContactController::class, 'thanks'])->name('public.thanks');
 
 require __DIR__.'/auth.php';

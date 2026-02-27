@@ -6,11 +6,14 @@
     <title>Grazie</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
 </head>
-<body class="bg-light">
-<div class="container py-5" style="max-width: 820px;">
-    <div class="alert alert-success shadow-sm rounded-4 p-4">
-        <h1 class="h4 mb-1">Grazie!</h1>
-        <div>Il contatto è stato inserito correttamente per la fiera <strong>{{ $exhibition->name }}</strong>.</div>
+<body class="bg-body-tertiary">
+<div class="container py-5" style="max-width: 760px;">
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-body p-4 p-md-5 text-center">
+            <div class="display-6 text-success mb-3"><i class="bi bi-check-circle-fill"></i></div>
+            <h1 class="h4 mb-2">Grazie! Contatto inviato correttamente</h1>
+            <p class="text-secondary mb-0">Abbiamo registrato il tuo contatto per la fiera <strong>{{ $exhibition->name }}</strong>.</p>
+        </div>
     </div>
 </div>
 </body>

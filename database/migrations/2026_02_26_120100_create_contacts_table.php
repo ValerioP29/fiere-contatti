@@ -17,16 +17,13 @@ return new class extends Migration {
             $table->string('phone')->nullable();
             $table->string('company')->nullable();
             $table->text('note')->nullable();
-
-            // Upload biglietto da visita
             $table->string('business_card_path')->nullable();
-
-            // Da dove arriva (interno vs form pubblico)
             $table->string('source')->default('internal'); // internal|public
 
             $table->timestamps();
 
             $table->index(['exhibition_id', 'last_name']);
+            $table->index(['exhibition_id', 'email']);
         });
     }
 

@@ -15,7 +15,10 @@ class Contact extends Model
         'phone',
         'company',
         'note',
-        'business_card_path',
+        'file_path',
+        'file_original_name',
+        'file_mime',
+        'file_size',
         'source',
     ];
 
