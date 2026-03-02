@@ -4,6 +4,8 @@ use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ExhibitionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PublicContactController;
+use App\Models\Contact;
+use App\Models\Exhibition;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -17,7 +19,19 @@ Route::get('/', function () {
  * Se non la usi, puoi pure toglierla.
  */
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    $latestExhibitions = Exhibition::query()
+        ->where('user_id', auth()->id())
+        ->latest()
+        ->take(5)
+        ->get();
+
+    return view('dashboard', [
+        'exhibitionsCount' => Exhibition::query()->where('user_id', auth()->id())->count(),
+        'contactsCount' => Contact::query()
+            ->whereHas('exhibition', fn ($query) => $query->where('user_id', auth()->id()))
+            ->count(),
+        'latestExhibitions' => $latestExhibitions,
+    ]);
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 /**
@@ -33,13 +47,7 @@ Route::middleware('auth')->group(function () {
  * Le TUE rotte protette (CRUD fiere + contatti)
  */
 Route::middleware(['auth'])->group(function () {
-    Route::get('/exhibitions', [ExhibitionController::class, 'index'])->name('exhibitions.index');
-    Route::get('/exhibitions/create', [ExhibitionController::class, 'create'])->name('exhibitions.create');
-    Route::post('/exhibitions', [ExhibitionController::class, 'store'])->name('exhibitions.store');
-    Route::get('/exhibitions/{exhibition}', [ExhibitionController::class, 'show'])->name('exhibitions.show');
-    Route::get('/exhibitions/{exhibition}/edit', [ExhibitionController::class, 'edit'])->name('exhibitions.edit');
-    Route::put('/exhibitions/{exhibition}', [ExhibitionController::class, 'update'])->name('exhibitions.update');
-    Route::delete('/exhibitions/{exhibition}', [ExhibitionController::class, 'destroy'])->name('exhibitions.destroy');
+    Route::resource('exhibitions', ExhibitionController::class);
 
     Route::post('/exhibitions/{exhibition}/public-link', [ExhibitionController::class, 'generatePublicLink'])
         ->name('exhibitions.public-link');
