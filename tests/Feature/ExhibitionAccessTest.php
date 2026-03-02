@@ -45,19 +45,18 @@ class ExhibitionAccessTest extends TestCase
 
         $response = $this->actingAs($owner)->post(route('exhibitions.store'), [
             'name' => 'Range Expo',
+            'date_mode' => 'range',
             'start_date' => '2026-03-01',
             'end_date' => '2026-03-03',
             'company' => 'Owner Inc',
         ]);
 
         $response->assertRedirect(route('exhibitions.index'));
-        $this->assertDatabaseHas('exhibitions', [
-            'user_id' => $owner->id,
-            'name' => 'Range Expo',
-            'date' => '2026-03-01',
-            'start_date' => '2026-03-01',
-            'end_date' => '2026-03-03',
-        ]);
+        $exhibition = Exhibition::where('name', 'Range Expo')->firstOrFail();
+        $this->assertSame($owner->id, $exhibition->user_id);
+        $this->assertNull($exhibition->date);
+        $this->assertEquals('2026-03-01', $exhibition->start_date->format('Y-m-d'));
+        $this->assertEquals('2026-03-03', $exhibition->end_date->format('Y-m-d'));
     }
 
     public function test_user_cannot_open_other_user_contacts(): void

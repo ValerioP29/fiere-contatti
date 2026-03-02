@@ -41,5 +41,13 @@
 </main>
 
 @stack('scripts')
+<script>
+    document.addEventListener('submit', function (e) {
+        const form = e.target.closest('form[data-confirm-delete]');
+        if (form && !confirm('Confermi l\'eliminazione?')) {
+            e.preventDefault();
+        }
+    });
+</script>
 </body>
 </html>

@@ -1,92 +1,120 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="it" class="h-full">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Inserisci contatto - {{ $exhibition->name }}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <title>Inserisci il tuo contatto — {{ $exhibition->name }}</title>
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet"/>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="bg-body-tertiary">
-<div class="container py-4 py-md-5" style="max-width: 760px;">
-    <div class="text-center mb-3">
-        <h1 class="h3 mb-1">Inserisci il tuo contatto</h1>
-        <p class="text-secondary mb-0">{{ $exhibition->name }} · {{ $exhibition->display_date }}</p>
+<body class="min-h-screen bg-slate-100 font-sans antialiased text-slate-900">
+
+<div class="mx-auto max-w-2xl px-4 py-8 sm:py-12">
+
+    <div class="mb-6 text-center">
+        <h1 class="text-2xl font-bold tracking-tight text-slate-900">Inserisci il tuo contatto</h1>
+        <p class="mt-1 text-sm text-slate-500">
+            {{ $exhibition->name }}
+            @if($exhibition->display_date !== '-')
+                · {{ $exhibition->display_date }}
+            @endif
+        </p>
     </div>
 
-    <div class="card border-0 shadow-sm rounded-4">
-        <div class="card-body p-4 p-md-5">
-            @if ($errors->any())
-                <div class="alert alert-danger rounded-3" role="alert">
-                    <strong>Controlla i dati inseriti:</strong>
-                    <ul class="mb-0 mt-2">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
-                </div>
-            @endif
-
-            <form method="POST" action="{{ route('public.store', ['token' => $token]) }}" enctype="multipart/form-data" class="vstack gap-3" id="publicForm">
-                @csrf
-
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label" for="first_name">Nome</label>
-                        <input class="form-control @error('first_name') is-invalid @enderror" id="first_name" name="first_name" value="{{ old('first_name') }}" required>
-                        @error('first_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label" for="last_name">Cognome</label>
-                        <input class="form-control @error('last_name') is-invalid @enderror" id="last_name" name="last_name" value="{{ old('last_name') }}" required>
-                        @error('last_name')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-                </div>
-
-                <div class="row g-3">
-                    <div class="col-12 col-md-6">
-                        <label class="form-label" for="email">Email</label>
-                        <input class="form-control @error('email') is-invalid @enderror" id="email" type="email" name="email" value="{{ old('email') }}">
-                        @error('email')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-                    <div class="col-12 col-md-6">
-                        <label class="form-label" for="phone">Telefono</label>
-                        <input class="form-control @error('phone') is-invalid @enderror" id="phone" name="phone" value="{{ old('phone') }}">
-                        @error('phone')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    </div>
-                </div>
-
-                <div>
-                    <label class="form-label" for="company">Azienda</label>
-                    <input class="form-control @error('company') is-invalid @enderror" id="company" name="company" value="{{ old('company') }}">
-                    @error('company')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-
-                <div>
-                    <label class="form-label" for="note">Note</label>
-                    <textarea class="form-control @error('note') is-invalid @enderror" id="note" name="note" rows="3">{{ old('note') }}</textarea>
-                    @error('note')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-
-                <div>
-                    <label class="form-label" for="contact_file">Allega un file (opzionale)</label>
-                    <input class="form-control @error('contact_file') is-invalid @enderror" id="contact_file" name="contact_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp">
-                    @error('contact_file')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    <div class="small text-secondary mt-1">Formati supportati: PDF/JPG/PNG/WEBP · max 10MB</div>
-                </div>
-
-                <button class="btn btn-primary btn-lg w-100" id="publicSubmitBtn" type="submit">
-                    <i class="bi bi-send me-1"></i> Invia contatto
-                </button>
-            </form>
+    @if ($errors->any())
+        <div class="mb-4 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
+            <strong>Controlla i dati inseriti:</strong>
+            <ul class="mt-2 list-disc ps-5">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
+    @endif
+
+    <div class="app-card p-6 sm:p-8"
+         x-data="{ submitting: false }">
+        <form method="POST"
+              action="{{ route('public.store', ['token' => $token]) }}"
+              enctype="multipart/form-data"
+              @submit="submitting = true"
+              class="space-y-5">
+            @csrf
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700" for="first_name">
+                        Nome <span class="text-rose-500">*</span>
+                    </label>
+                    <input id="first_name" name="first_name" type="text" required
+                           value="{{ old('first_name') }}"
+                           class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('first_name') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">
+                    @error('first_name')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700" for="last_name">
+                        Cognome <span class="text-rose-500">*</span>
+                    </label>
+                    <input id="last_name" name="last_name" type="text" required
+                           value="{{ old('last_name') }}"
+                           class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('last_name') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">
+                    @error('last_name')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                </div>
+            </div>
+
+            <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700" for="email">Email</label>
+                    <input id="email" name="email" type="email"
+                           value="{{ old('email') }}"
+                           class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('email') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">
+                    @error('email')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label class="mb-1 block text-sm font-medium text-slate-700" for="phone">Telefono</label>
+                    <input id="phone" name="phone" type="text"
+                           value="{{ old('phone') }}"
+                           class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('phone') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">
+                    @error('phone')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                </div>
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700" for="company">Azienda</label>
+                <input id="company" name="company" type="text"
+                       value="{{ old('company') }}"
+                       class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('company') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">
+                @error('company')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700" for="note">Note</label>
+                <textarea id="note" name="note" rows="3"
+                          class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('note') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">{{ old('note') }}</textarea>
+                @error('note')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+            </div>
+
+            <div>
+                <label class="mb-1 block text-sm font-medium text-slate-700" for="contact_file">
+                    Allega un file <span class="font-normal text-slate-400">(opzionale)</span>
+                </label>
+                <input id="contact_file" name="contact_file" type="file"
+                       accept=".pdf,.jpg,.jpeg,.png,.webp"
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 focus:outline-none file:mr-3 file:rounded file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-medium file:text-slate-700 hover:file:bg-slate-200 @error('contact_file') border-rose-400 @enderror">
+                <p class="mt-1 text-xs text-slate-400">Formati supportati: PDF, JPG, PNG, WebP · max 10 MB</p>
+                @error('contact_file')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+            </div>
+
+            <button type="submit"
+                    :disabled="submitting"
+                    class="w-full rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-700 disabled:opacity-60">
+                <span x-show="!submitting">Invia contatto</span>
+                <span x-show="submitting" x-cloak>Invio in corso…</span>
+            </button>
+        </form>
     </div>
 </div>
-<script>
-    document.getElementById('publicForm').addEventListener('submit', () => {
-        const btn = document.getElementById('publicSubmitBtn');
-        btn.disabled = true;
-        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Invio in corso...';
-    });
-</script>
+
 </body>
 </html>

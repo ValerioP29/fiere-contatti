@@ -1,17 +1,20 @@
 @props(['title' => null, 'subtitle' => null])
 
-<div {{ $attributes->merge(['class' => 'card border-0 shadow-sm rounded-4']) }}>
+<div {{ $attributes->merge(['class' => 'app-card']) }}>
     @if($title || $subtitle)
-        <div class="card-body border-bottom">
+        <div class="{{ $slot->isEmpty() ? 'p-6 text-center' : 'border-b border-slate-100 px-5 py-4' }}">
             @if($title)
-                <h2 class="h5 mb-1">{{ $title }}</h2>
+                <p class="font-semibold text-slate-900">{{ $title }}</p>
             @endif
             @if($subtitle)
-                <p class="text-secondary mb-0">{{ $subtitle }}</p>
+                <p class="mt-0.5 text-sm text-slate-500">{{ $subtitle }}</p>
             @endif
         </div>
     @endif
-    <div class="card-body">
-        {{ $slot }}
-    </div>
+
+    @if($slot->isNotEmpty())
+        <div class="p-5">
+            {{ $slot }}
+        </div>
+    @endif
 </div>
