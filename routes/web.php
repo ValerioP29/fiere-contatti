@@ -17,7 +17,7 @@ Route::get('/', function () {
  * Se non la usi, puoi pure toglierla.
  */
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return redirect()->route('exhibitions.index');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 /**
