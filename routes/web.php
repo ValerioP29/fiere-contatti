@@ -7,9 +7,9 @@ use App\Http\Controllers\PublicContactController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    // Se vuoi la welcome di Breeze, metti: return view('welcome');
-    // Ma per la tua app ha più senso andare subito alle fiere.
-    return redirect()->route('exhibitions.index');
+    return auth()->check()
+        ? redirect()->route('exhibitions.index')
+        : redirect()->route('login');
 });
 
 /**

@@ -21,16 +21,7 @@ class ContactController extends Controller
         $q = trim((string) $request->get('q', ''));
 
         $contacts = $exhibition->contacts()
-            ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($qq) use ($q) {
-                    $qq->where('first_name', 'like', "%{$q}%")
-                        ->orWhere('last_name', 'like', "%{$q}%")
-                        ->orWhere('email', 'like', "%{$q}%")
-                        ->orWhere('phone', 'like', "%{$q}%")
-                        ->orWhere('company', 'like', "%{$q}%")
-                        ->orWhere('note', 'like', "%{$q}%");
-                });
-            })
+            ->when($q !== '', fn ($query) => $query->search($q))
             ->orderBy('last_name')
             ->paginate(30)
             ->withQueryString();
@@ -113,16 +104,7 @@ class ContactController extends Controller
 
         $q = trim((string) $request->get('q', ''));
         $rows = $exhibition->contacts()
-            ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($qq) use ($q) {
-                    $qq->where('first_name', 'like', "%{$q}%")
-                        ->orWhere('last_name', 'like', "%{$q}%")
-                        ->orWhere('email', 'like', "%{$q}%")
-                        ->orWhere('phone', 'like', "%{$q}%")
-                        ->orWhere('company', 'like', "%{$q}%")
-                        ->orWhere('note', 'like', "%{$q}%");
-                });
-            })
+            ->when($q !== '', fn ($query) => $query->search($q))
             ->orderBy('last_name')
             ->get(['first_name', 'last_name', 'email', 'phone', 'company', 'note', 'source', 'created_at']);
 

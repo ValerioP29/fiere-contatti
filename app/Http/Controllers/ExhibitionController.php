@@ -110,8 +110,20 @@ class ExhibitionController extends Controller
 
     private function normalizePayload(array $data): array
     {
-        $data['start_date'] = null;
-        $data['end_date'] = null;
+        $mode = $data['date_mode'] ?? 'single';
+        unset($data['date_mode']);
+
+        // Auto-detect range mode when start_date/end_date submitted without explicit date_mode
+        if ($mode === 'single' && (! empty($data['start_date']) || ! empty($data['end_date']))) {
+            $mode = 'range';
+        }
+
+        if ($mode === 'range') {
+            $data['date'] = null;
+        } else {
+            $data['start_date'] = null;
+            $data['end_date']   = null;
+        }
 
         return $data;
     }

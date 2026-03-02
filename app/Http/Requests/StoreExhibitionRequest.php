@@ -14,10 +14,13 @@ class StoreExhibitionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'date' => ['nullable', 'date'],
-            'company' => ['nullable', 'string', 'max:255'],
-            'note' => ['nullable', 'string', 'max:5000'],
+            'name'       => ['required', 'string', 'max:255'],
+            'date_mode'  => ['nullable', 'string', 'in:single,range'],
+            'date'       => ['nullable', 'date'],
+            'start_date' => ['nullable', 'date'],
+            'end_date'   => ['nullable', 'date', 'after_or_equal:start_date'],
+            'company'    => ['nullable', 'string', 'max:255'],
+            'note'       => ['nullable', 'string', 'max:5000'],
         ];
     }
 }

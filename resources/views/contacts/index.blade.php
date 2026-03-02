@@ -1,173 +1,338 @@
-<x-main-layout :title="'Contatti - '.$exhibition->name">
-    <div class="page-header d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center">
-        <div>
-            <a class="text-decoration-none text-secondary small" href="{{ route('exhibitions.index') }}"><i class="bi bi-arrow-left"></i> Torna alle fiere</a>
-            <h1 class="h3 mb-1 mt-1">{{ $exhibition->name }}</h1>
-            <div class="text-secondary">{{ $exhibition->display_date }} · {{ $exhibition->company }}</div>
-        </div>
-        <div class="actions d-flex gap-2">
-            <a class="btn btn-outline-secondary" href="{{ route('contacts.export', $exhibition) }}?q={{ urlencode($q) }}"><i class="bi bi-file-earmark-spreadsheet me-1"></i>Export</a>
-            <x-ui/button variant="primary" icon="plus-lg" data-bs-toggle="offcanvas" data-bs-target="#contactCanvas">Aggiungi contatto</x-ui/button>
-        </div>
-    </div>
+<x-main-layout :title="'Contatti — '.$exhibition->name">
+    <div class="app-container py-6"
+         x-data="{
+            open: {{ $errors->any() ? 'true' : 'false' }},
+            submitting: false,
+            contactId: null,
+            form: { first_name: '', last_name: '', email: '', phone: '', company: '', note: '' },
+            openCreate() {
+                this.contactId = null;
+                this.form = { first_name: '', last_name: '', email: '', phone: '', company: '', note: '' };
+                this.open = true;
+            },
+            openEdit(data) {
+                this.contactId = data.id;
+                this.form = {
+                    first_name: data.first_name,
+                    last_name:  data.last_name,
+                    email:      data.email,
+                    phone:      data.phone,
+                    company:    data.company,
+                    note:       data.note,
+                };
+                this.open = true;
+            },
+            closePanel() { this.open = false; }
+         }">
 
-    <x-ui.card class="mb-3">
-        <form id="searchForm" method="GET" action="{{ route('contacts.index', $exhibition) }}" class="row g-2 align-items-center">
-            <div class="col-12 col-md">
-                <label for="contactSearch" class="form-label visually-hidden">Cerca contatti</label>
-                <div class="input-group">
-                    <span class="input-group-text"><i class="bi bi-search"></i></span>
-                    <input id="contactSearch" class="form-control" name="q" value="{{ $q }}" placeholder="Cerca su nome, cognome, email, telefono, azienda, note...">
-                </div>
+        {{-- Header --}}
+        <div class="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+                <a href="{{ route('exhibitions.show', $exhibition) }}"
+                   class="mb-1 inline-flex items-center gap-1 text-xs font-medium text-slate-500 transition hover:text-slate-700">
+                    ← Torna alla fiera
+                </a>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">{{ $exhibition->name }}</h1>
+                <p class="mt-1 text-sm text-slate-500">
+                    {{ $exhibition->display_date }}{{ $exhibition->company ? ' · '.$exhibition->company : '' }}
+                </p>
             </div>
-            <div class="col-12 col-md-auto d-flex gap-2">
-                <button class="btn btn-primary" type="submit">Cerca</button>
-                <a class="btn btn-outline-secondary" href="{{ route('contacts.index', $exhibition) }}">Reset</a>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('contacts.export', $exhibition) }}?q={{ urlencode($q) }}"
+                   class="inline-flex items-center rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+                    Export Excel
+                </a>
+                <button @click="openCreate()" type="button"
+                        class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
+                    + Aggiungi contatto
+                </button>
             </div>
-        </form>
-    </x-ui.card>
-
-    <div class="d-md-none row g-3 mb-3">
-        @forelse($contacts as $c)
-            <div class="col-12">
-                <x-ui.card>
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <div>
-                            <h2 class="h6 mb-0">{{ $c->first_name }} {{ $c->last_name }}</h2>
-                            <p class="text-secondary small mb-0">{{ $c->email ?: 'Nessuna email' }}</p>
-                        </div>
-                        <x-ui.badge variant="{{ $c->source === 'public' ? 'info' : 'secondary' }}">{{ $c->source }}</x-ui.badge>
-                    </div>
-                    <p class="small mb-1"><strong>Telefono:</strong> {{ $c->phone ?: '-' }}</p>
-                    <p class="small mb-1"><strong>Azienda:</strong> {{ $c->company ?: '-' }}</p>
-                    <p class="small text-secondary mb-2">{{ $c->note ?: 'Nessuna nota' }}</p>
-                    <div class="d-flex flex-wrap gap-2 mb-2">
-                        @if($c->file_path)
-                            <a class="btn btn-sm btn-outline-primary" href="{{ route('contacts.file.download', [$exhibition, $c]) }}">Download</a>
-                            <a class="btn btn-sm btn-outline-secondary" target="_blank" href="{{ route('contacts.file.preview', [$exhibition, $c]) }}">Preview</a>
-                        @endif
-                        <button class="btn btn-sm btn-primary js-edit-contact"
-                                data-id="{{ $c->id }}"
-                                data-first_name="{{ e($c->first_name) }}"
-                                data-last_name="{{ e($c->last_name) }}"
-                                data-email="{{ e($c->email ?? '') }}"
-                                data-phone="{{ e($c->phone ?? '') }}"
-                                data-company="{{ e($c->company ?? '') }}"
-                                data-note="{{ e($c->note ?? '') }}"
-                                data-bs-toggle="offcanvas" data-bs-target="#contactCanvas">Modifica</button>
-                    </div>
-                    <form method="POST" action="{{ route('contacts.destroy', [$exhibition, $c]) }}" data-confirm-delete="true">
-                        @csrf
-                        @method('DELETE')
-                        <button class="btn btn-sm btn-danger w-100" type="submit">Elimina</button>
-                    </form>
-                </x-ui.card>
-            </div>
-        @empty
-            <div class="col-12"><x-ui.card title="Nessun contatto" subtitle="Aggiungi il primo contatto di questa fiera." /></div>
-        @endforelse
-    </div>
-
-    <div class="d-none d-md-block mb-3">
-        <x-ui.table>
-            <thead>
-            <tr>
-                <th class="p-3">Nome</th>
-                <th class="p-3">Email</th>
-                <th class="p-3">Telefono</th>
-                <th class="p-3">Azienda</th>
-                <th class="p-3">Note</th>
-                <th class="p-3">File</th>
-                <th class="p-3 text-end">Azioni</th>
-            </tr>
-            </thead>
-            <tbody>
-            @forelse($contacts as $c)
-                <tr>
-                    <td class="p-3">
-                        <div class="fw-semibold">{{ $c->first_name }} {{ $c->last_name }}</div>
-                        <div class="small text-secondary">{{ $c->source === 'public' ? 'Da form pubblico' : 'Inserito interno' }}</div>
-                    </td>
-                    <td class="p-3">{{ $c->email }}</td>
-                    <td class="p-3">{{ $c->phone }}</td>
-                    <td class="p-3">{{ $c->company }}</td>
-                    <td class="p-3" style="max-width:280px;"><div class="text-truncate" title="{{ $c->note }}">{{ $c->note }}</div></td>
-                    <td class="p-3">
-                        @if($c->file_path)
-                            <div class="btn-group btn-group-sm">
-                                <a class="btn btn-outline-primary" href="{{ route('contacts.file.download', [$exhibition, $c]) }}">Download</a>
-                                <a class="btn btn-outline-secondary" target="_blank" href="{{ route('contacts.file.preview', [$exhibition, $c]) }}">Preview</a>
-                            </div>
-                        @else
-                            <span class="text-secondary small">Nessuno</span>
-                        @endif
-                    </td>
-                    <td class="p-3 text-end">
-                        <div class="btn-group">
-                            <button class="btn btn-primary btn-sm js-edit-contact"
-                                    data-id="{{ $c->id }}"
-                                    data-first_name="{{ e($c->first_name) }}"
-                                    data-last_name="{{ e($c->last_name) }}"
-                                    data-email="{{ e($c->email ?? '') }}"
-                                    data-phone="{{ e($c->phone ?? '') }}"
-                                    data-company="{{ e($c->company ?? '') }}"
-                                    data-note="{{ e($c->note ?? '') }}"
-                                    data-bs-toggle="offcanvas" data-bs-target="#contactCanvas"><i class="bi bi-pencil"></i></button>
-                            <form method="POST" action="{{ route('contacts.destroy', [$exhibition, $c]) }}" data-confirm-delete="true">
-                                @csrf
-                                @method('DELETE')
-                                <button class="btn btn-danger btn-sm" type="submit"><i class="bi bi-trash"></i></button>
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-            @empty
-                <tr><td colspan="7" class="p-4 text-center text-secondary">Nessun contatto.</td></tr>
-            @endforelse
-            </tbody>
-        </x-ui.table>
-    </div>
-
-    <div class="mt-3">{{ $contacts->links() }}</div>
-
-    <div class="offcanvas offcanvas-end" tabindex="-1" id="contactCanvas">
-        <div class="offcanvas-header border-bottom">
-            <h2 class="h5 offcanvas-title mb-0">Gestione contatto</h2>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
         </div>
-        <div class="offcanvas-body">
-            <form id="contactForm" method="POST" enctype="multipart/form-data" action="{{ route('contacts.store', $exhibition) }}" class="vstack gap-3">
-                @csrf
-                <input type="hidden" id="contactMethod" name="_method" value="POST">
 
-                <div class="row g-2">
-                    <div class="col-6"><x-ui.input name="first_name" label="Nome" required /></div>
-                    <div class="col-6"><x-ui.input name="last_name" label="Cognome" required /></div>
+        {{-- Search --}}
+        <div class="app-card mb-4 p-4">
+            <form id="searchForm" method="GET" action="{{ route('contacts.index', $exhibition) }}"
+                  class="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <div class="flex flex-1 items-center rounded-lg border border-slate-300 bg-white px-3 focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-100">
+                    <svg class="mr-2 h-4 w-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+                    </svg>
+                    <input id="contactSearch" name="q" value="{{ $q }}"
+                           placeholder="Cerca nome, email, telefono, azienda, note…"
+                           class="flex-1 bg-transparent py-2 text-sm outline-none">
                 </div>
-
-                <div class="row g-2">
-                    <div class="col-6"><x-ui.input name="email" type="email" label="Email" /></div>
-                    <div class="col-6"><x-ui.input name="phone" label="Telefono" /></div>
+                <div class="flex gap-2">
+                    <button type="submit"
+                            class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
+                        Cerca
+                    </button>
+                    <a href="{{ route('contacts.index', $exhibition) }}"
+                       class="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+                        Reset
+                    </a>
                 </div>
-
-                <x-ui.input name="company" label="Azienda" />
-
-                <div>
-                    <label class="form-label" for="note">Note</label>
-                    <textarea class="form-control @error('note') is-invalid @enderror" name="note" id="note" rows="3">{{ old('note') }}</textarea>
-                    @error('note')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                </div>
-
-                <div>
-                    <label class="form-label" for="contact_file">Allegato contatto</label>
-                    <input class="form-control @error('contact_file') is-invalid @enderror" id="contact_file" name="contact_file" type="file" accept=".pdf,.jpg,.jpeg,.png,.webp">
-                    @error('contact_file')<div class="invalid-feedback">{{ $message }}</div>@enderror
-                    <div class="text-secondary small mt-1">Opzionale, max 10MB.</div>
-                </div>
-
-                <x-ui/button id="saveContactBtn" type="submit" variant="primary" class="w-100" icon="check2">Salva</x-ui/button>
             </form>
         </div>
+
+        {{-- Mobile cards --}}
+        <div class="space-y-3 md:hidden">
+            @forelse($contacts as $c)
+                <div class="app-card p-4">
+                    <div class="mb-2 flex items-start justify-between gap-2">
+                        <div>
+                            <p class="font-semibold text-slate-900">{{ $c->first_name }} {{ $c->last_name }}</p>
+                            <p class="text-sm text-slate-500">{{ $c->email ?: 'Nessuna email' }}</p>
+                        </div>
+                        @if($c->source === 'public')
+                            <span class="inline-flex shrink-0 items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">Pubblico</span>
+                        @else
+                            <span class="inline-flex shrink-0 items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">Interno</span>
+                        @endif
+                    </div>
+                    @if($c->phone || $c->company)
+                        <div class="mb-2 space-y-0.5 text-sm text-slate-600">
+                            @if($c->phone)<p><span class="font-medium">Tel:</span> {{ $c->phone }}</p>@endif
+                            @if($c->company)<p><span class="font-medium">Azienda:</span> {{ $c->company }}</p>@endif
+                        </div>
+                    @endif
+                    @if($c->note)
+                        <p class="mb-3 line-clamp-2 text-xs text-slate-500">{{ $c->note }}</p>
+                    @endif
+                    <div class="flex flex-wrap gap-2">
+                        @if($c->file_path)
+                            <a href="{{ route('contacts.file.download', [$exhibition, $c]) }}"
+                               class="rounded-md border border-indigo-200 px-2.5 py-1 text-xs font-medium text-indigo-700 transition hover:bg-indigo-50">Download</a>
+                            <a href="{{ route('contacts.file.preview', [$exhibition, $c]) }}" target="_blank"
+                               class="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50">Preview</a>
+                        @endif
+                        <button type="button"
+                                data-contact="{{ e(json_encode(['id' => $c->id, 'first_name' => $c->first_name, 'last_name' => $c->last_name, 'email' => $c->email ?? '', 'phone' => $c->phone ?? '', 'company' => $c->company ?? '', 'note' => $c->note ?? ''])) }}"
+                                @click="openEdit(JSON.parse($el.dataset.contact))"
+                                class="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50">
+                            Modifica
+                        </button>
+                        <form method="POST" action="{{ route('contacts.destroy', [$exhibition, $c]) }}"
+                              @submit.prevent="if(confirm('Eliminare questo contatto?')) $el.submit()">
+                            @csrf @method('DELETE')
+                            <button type="submit"
+                                    class="rounded-md border border-rose-200 px-2.5 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-50">
+                                Elimina
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @empty
+                <div class="app-card p-10 text-center">
+                    <p class="text-sm text-slate-500">Nessun contatto trovato.</p>
+                    <button @click="openCreate()" type="button"
+                            class="mt-3 inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700">
+                        + Aggiungi il primo contatto
+                    </button>
+                </div>
+            @endforelse
+        </div>
+
+        {{-- Desktop table --}}
+        <div class="hidden md:block">
+            <div class="overflow-x-auto rounded-lg border border-slate-200">
+                <table class="app-table">
+                    <thead class="app-thead">
+                        <tr>
+                            <th class="app-th">Nome</th>
+                            <th class="app-th">Email</th>
+                            <th class="app-th">Telefono</th>
+                            <th class="app-th">Azienda</th>
+                            <th class="app-th">Note</th>
+                            <th class="app-th">File</th>
+                            <th class="app-th text-right">Azioni</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 bg-white">
+                        @forelse($contacts as $c)
+                            <tr class="hover:bg-slate-50">
+                                <td class="app-td">
+                                    <p class="font-semibold text-slate-900">{{ $c->first_name }} {{ $c->last_name }}</p>
+                                    @if($c->source === 'public')
+                                        <span class="inline-flex items-center rounded-full bg-sky-100 px-2 py-0.5 text-xs font-medium text-sky-700">Pubblico</span>
+                                    @else
+                                        <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">Interno</span>
+                                    @endif
+                                </td>
+                                <td class="app-td text-slate-600">{{ $c->email ?: '—' }}</td>
+                                <td class="app-td text-slate-600">{{ $c->phone ?: '—' }}</td>
+                                <td class="app-td text-slate-600">{{ $c->company ?: '—' }}</td>
+                                <td class="app-td max-w-[200px] text-slate-500">
+                                    <div class="truncate" title="{{ $c->note }}">{{ $c->note ?: '—' }}</div>
+                                </td>
+                                <td class="app-td">
+                                    @if($c->file_path)
+                                        <div class="flex gap-1.5">
+                                            <a href="{{ route('contacts.file.download', [$exhibition, $c]) }}"
+                                               class="rounded-md border border-indigo-200 px-2.5 py-1 text-xs font-medium text-indigo-700 transition hover:bg-indigo-50">Download</a>
+                                            <a href="{{ route('contacts.file.preview', [$exhibition, $c]) }}" target="_blank"
+                                               class="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50">Preview</a>
+                                        </div>
+                                    @else
+                                        <span class="text-sm text-slate-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="app-td text-right">
+                                    <div class="flex justify-end gap-1.5">
+                                        <button type="button"
+                                                data-contact="{{ e(json_encode(['id' => $c->id, 'first_name' => $c->first_name, 'last_name' => $c->last_name, 'email' => $c->email ?? '', 'phone' => $c->phone ?? '', 'company' => $c->company ?? '', 'note' => $c->note ?? ''])) }}"
+                                                @click="openEdit(JSON.parse($el.dataset.contact))"
+                                                class="rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 transition hover:bg-slate-50">
+                                            Modifica
+                                        </button>
+                                        <form method="POST" action="{{ route('contacts.destroy', [$exhibition, $c]) }}"
+                                              @submit.prevent="if(confirm('Eliminare questo contatto?')) $el.submit()">
+                                            @csrf @method('DELETE')
+                                            <button type="submit"
+                                                    class="rounded-md border border-rose-200 px-2.5 py-1 text-xs font-medium text-rose-700 transition hover:bg-rose-50">
+                                                Elimina
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="7" class="px-4 py-12 text-center text-sm text-slate-500">
+                                    Nessun contatto trovato.
+                                    <button @click="openCreate()" type="button"
+                                            class="ml-1 font-medium text-indigo-600 hover:underline">
+                                        Aggiungi il primo
+                                    </button>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {{-- Pagination --}}
+        <div class="mt-4">{{ $contacts->links() }}</div>
+
+        {{-- Slide-over backdrop --}}
+        <div x-show="open"
+             x-transition:enter="ease-out duration-200"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="ease-in duration-150"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-40 bg-slate-900/50"
+             @click="closePanel()"
+             x-cloak></div>
+
+        {{-- Slide-over panel --}}
+        <div x-show="open"
+             x-transition:enter="ease-out duration-200"
+             x-transition:enter-start="translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="ease-in duration-150"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="translate-x-full"
+             class="fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-white shadow-2xl sm:max-w-md"
+             x-cloak>
+            <div class="flex items-center justify-between border-b border-slate-100 px-5 py-4">
+                <h2 class="text-base font-semibold text-slate-900"
+                    x-text="contactId ? 'Modifica contatto' : 'Nuovo contatto'"></h2>
+                <button type="button" @click="closePanel()"
+                        class="rounded-md p-1.5 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">
+                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-5">
+                <form method="POST"
+                      enctype="multipart/form-data"
+                      :action="contactId
+                          ? `{{ url('exhibitions/'.$exhibition->id.'/contacts') }}/${contactId}`
+                          : `{{ route('contacts.store', $exhibition) }}`"
+                      @submit="submitting = true"
+                      class="space-y-4">
+                    @csrf
+                    <input type="hidden" name="_method" :value="contactId ? 'PUT' : 'POST'">
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700" for="first_name">
+                                Nome <span class="text-rose-500">*</span>
+                            </label>
+                            <input id="first_name" name="first_name" type="text" required
+                                   x-model="form.first_name"
+                                   class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('first_name') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">
+                            @error('first_name')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700" for="last_name">
+                                Cognome <span class="text-rose-500">*</span>
+                            </label>
+                            <input id="last_name" name="last_name" type="text" required
+                                   x-model="form.last_name"
+                                   class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('last_name') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">
+                            @error('last_name')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700" for="email">Email</label>
+                            <input id="email" name="email" type="email"
+                                   x-model="form.email"
+                                   class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('email') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">
+                            @error('email')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                        </div>
+                        <div>
+                            <label class="mb-1 block text-sm font-medium text-slate-700" for="phone">Telefono</label>
+                            <input id="phone" name="phone" type="text"
+                                   x-model="form.phone"
+                                   class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('phone') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">
+                            @error('phone')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700" for="company">Azienda</label>
+                        <input id="company" name="company" type="text"
+                               x-model="form.company"
+                               class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('company') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}">
+                        @error('company')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700" for="note">Note</label>
+                        <textarea id="note" name="note" rows="3"
+                                  x-model="form.note"
+                                  class="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2 {{ $errors->has('note') ? 'border-rose-400 ring-rose-100' : 'border-slate-300 focus:border-indigo-500 focus:ring-indigo-100' }}"></textarea>
+                        @error('note')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="mb-1 block text-sm font-medium text-slate-700" for="contact_file">Allegato</label>
+                        <input id="contact_file" name="contact_file" type="file"
+                               accept=".pdf,.jpg,.jpeg,.png,.webp"
+                               class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-500 focus:outline-none file:mr-3 file:rounded file:border-0 file:bg-slate-100 file:px-3 file:py-1 file:text-xs file:font-medium file:text-slate-700 hover:file:bg-slate-200 @error('contact_file') border-rose-400 @enderror">
+                        <p class="mt-1 text-xs text-slate-400">Opzionale · PDF, JPG, PNG, WebP · max 10 MB</p>
+                        @error('contact_file')<p class="mt-1 text-xs text-rose-600">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit"
+                                :disabled="submitting"
+                                class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-60">
+                            <span x-show="!submitting">Salva</span>
+                            <span x-show="submitting" x-cloak>Salvataggio…</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 
     @push('scripts')
@@ -179,38 +344,6 @@
                 searchTimer = setTimeout(() => {
                     document.getElementById('searchForm').submit();
                 }, 450);
-            });
-
-            document.querySelectorAll('.js-edit-contact').forEach((btn) => {
-                btn.addEventListener('click', () => {
-                    const id = btn.dataset.id;
-                    document.getElementById('first_name').value = btn.dataset.first_name || '';
-                    document.getElementById('last_name').value = btn.dataset.last_name || '';
-                    document.getElementById('email').value = btn.dataset.email || '';
-                    document.getElementById('phone').value = btn.dataset.phone || '';
-                    document.getElementById('company').value = btn.dataset.company || '';
-                    document.getElementById('note').value = btn.dataset.note || '';
-
-                    const form = document.getElementById('contactForm');
-                    form.action = `/exhibitions/{{ $exhibition->id }}/contacts/${id}`;
-                    document.getElementById('contactMethod').value = 'PUT';
-                });
-            });
-
-            document.getElementById('contactCanvas').addEventListener('show.bs.offcanvas', (ev) => {
-                const trigger = ev.relatedTarget;
-                if (trigger && trigger.classList.contains('btn-primary') && !trigger.classList.contains('js-edit-contact')) {
-                    const form = document.getElementById('contactForm');
-                    form.action = `/exhibitions/{{ $exhibition->id }}/contacts`;
-                    document.getElementById('contactMethod').value = 'POST';
-                    form.reset();
-                }
-            });
-
-            document.getElementById('contactForm').addEventListener('submit', () => {
-                const btn = document.getElementById('saveContactBtn');
-                btn.disabled = true;
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Salvataggio...';
             });
         </script>
     @endpush
