@@ -4,15 +4,22 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreExhibitionRequest;
 use App\Models\Exhibition;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class ExhibitionController extends Controller
 {
+    use AuthorizesRequests;
+
+    public function __construct()
+    {
+        $this->authorizeResource(Exhibition::class, 'exhibition');
+    }
+
     public function index(): View
     {
         $exhibitions = Exhibition::query()
@@ -30,8 +37,6 @@ class ExhibitionController extends Controller
 
     public function show(Request $request, Exhibition $exhibition): View
     {
-        $this->ensureOwnership($exhibition);
-
         if (! $exhibition->public_token) {
             $exhibition->update(['public_token' => (string) Str::ulid()]);
             $exhibition->refresh();
@@ -61,8 +66,6 @@ class ExhibitionController extends Controller
 
     public function edit(Exhibition $exhibition): View
     {
-        $this->ensureOwnership($exhibition);
-
         return view('exhibitions.edit', compact('exhibition'));
     }
 
@@ -79,8 +82,6 @@ class ExhibitionController extends Controller
 
     public function update(StoreExhibitionRequest $request, Exhibition $exhibition): RedirectResponse
     {
-        $this->ensureOwnership($exhibition);
-
         $exhibition->update($this->normalizePayload($request->validated()));
 
         return redirect()->route('exhibitions.index')->with('status', 'Fiera aggiornata.');
@@ -88,7 +89,6 @@ class ExhibitionController extends Controller
 
     public function destroy(Exhibition $exhibition): RedirectResponse
     {
-        $this->ensureOwnership($exhibition);
         $exhibition->delete();
 
         return redirect()->route('exhibitions.index')->with('status', 'Fiera eliminata.');
@@ -96,7 +96,7 @@ class ExhibitionController extends Controller
 
     public function generatePublicLink(Request $request, Exhibition $exhibition): JsonResponse
     {
-        $this->ensureOwnership($exhibition);
+        $this->authorize('update', $exhibition);
 
         $regenerate = $request->boolean('regenerate');
         if (! $exhibition->public_token || $regenerate) {
@@ -126,16 +126,5 @@ class ExhibitionController extends Controller
         }
 
         return $data;
-    }
-
-    private function ensureOwnership(Exhibition $exhibition): void
-    {
-        if ($exhibition->user_id !== auth()->id()) {
-            Log::warning('Tentativo di accesso a fiera non autorizzata', [
-                'user_id' => auth()->id(),
-                'exhibition_id' => $exhibition->id,
-            ]);
-            abort(404);
-        }
     }
 }
