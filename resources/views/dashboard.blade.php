@@ -38,8 +38,8 @@
                             <td class="app-td font-semibold text-slate-900">{{ $exhibition->name }}</td>
                             <td class="app-td">{{ $exhibition->display_date }}</td>
                             <td class="app-td">{{ $exhibition->company ?: '—' }}</td>
-                            <td class="app-td text-right">
-                                <a href="{{ route('exhibitions.show', $exhibition) }}" class="rounded-md border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-100">Apri</a>
+                            <td class="app-td">
+                                <x-exhibition-actions :exhibition="$exhibition" />
                             </td>
                         </tr>
                     @empty
