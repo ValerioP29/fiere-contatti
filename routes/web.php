@@ -52,16 +52,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/exhibitions/{exhibition}/public-link', [ExhibitionController::class, 'generatePublicLink'])
         ->name('exhibitions.public-link');
 
-    Route::get('/exhibitions/{exhibition}/contacts', [ContactController::class, 'index'])->name('contacts.index');
-    Route::post('/exhibitions/{exhibition}/contacts', [ContactController::class, 'store'])->name('contacts.store');
-    Route::put('/exhibitions/{exhibition}/contacts/{contact}', [ContactController::class, 'update'])->name('contacts.update');
-    Route::delete('/exhibitions/{exhibition}/contacts/{contact}', [ContactController::class, 'destroy'])->name('contacts.destroy');
+    Route::post('/exhibitions/{exhibition}/contacts', [ContactController::class, 'store'])->name('exhibitions.contacts.store');
+    Route::put('/exhibitions/{exhibition}/contacts/{contact}', [ContactController::class, 'update'])->name('exhibitions.contacts.update');
+    Route::delete('/exhibitions/{exhibition}/contacts/{contact}', [ContactController::class, 'destroy'])->name('exhibitions.contacts.destroy');
 
-    Route::get('/exhibitions/{exhibition}/contacts-export', [ContactController::class, 'exportExcel'])->name('contacts.export');
+    Route::get('/exhibitions/{exhibition}/contacts-export', [ContactController::class, 'exportExcel'])->name('exhibitions.contacts.export');
     Route::get('/exhibitions/{exhibition}/contacts/{contact}/file/download', [ContactController::class, 'downloadFile'])
-        ->name('contacts.file.download');
+        ->name('exhibitions.contacts.download');
     Route::get('/exhibitions/{exhibition}/contacts/{contact}/file/preview', [ContactController::class, 'previewFile'])
-        ->name('contacts.file.preview');
+        ->name('exhibitions.contacts.preview');
 });
 
 /**

@@ -37,6 +37,36 @@ class ExhibitionDashboardAndShowTest extends TestCase
         $response->assertSee('Condividi link');
     }
 
+
+    public function test_can_create_contact_inside_exhibition_and_redirect_back_to_show(): void
+    {
+        $user = User::factory()->create();
+
+        $exhibition = Exhibition::create([
+            'user_id' => $user->id,
+            'name' => 'Sales Expo',
+            'date' => now()->toDateString(),
+            'company' => 'Acme',
+            'public_token' => (string) Str::ulid(),
+        ]);
+
+        $response = $this->actingAs($user)->post(route('exhibitions.contacts.store', $exhibition), [
+            'first_name' => 'Anna',
+            'last_name' => 'Bianchi',
+            'email' => 'anna@example.com',
+        ]);
+
+        $response->assertRedirect(route('exhibitions.show', $exhibition));
+        $response->assertSessionHas('status', 'Contatto aggiunto.');
+
+        $this->assertDatabaseHas('contacts', [
+            'exhibition_id' => $exhibition->id,
+            'first_name' => 'Anna',
+            'last_name' => 'Bianchi',
+            'source' => 'internal',
+        ]);
+    }
+
     public function test_show_page_displays_only_contacts_for_selected_exhibition(): void
     {
         $user = User::factory()->create();

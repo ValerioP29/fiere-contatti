@@ -7,7 +7,7 @@
 <div class="flex justify-end">
     <div x-data="{ copied: false, failed: false, publicUrl: @js($publicUrl) }" class="w-full max-w-max">
         <div class="hidden items-center justify-end gap-2 md:flex">
-            <a href="{{ route('contacts.index', ['exhibition' => $exhibition, 'open' => 'create']) }}"
+            <a href="{{ route('exhibitions.show', ['exhibition' => $exhibition, 'open' => 'create']) }}"
                class="inline-flex items-center gap-1.5 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-medium text-emerald-700 transition hover:bg-emerald-100">
                 <x-icons.plus />
                 <span>Aggiungi contatto</span>
@@ -56,7 +56,7 @@
                 </x-slot>
 
                 <x-slot name="content">
-                    <x-dropdown-link :href="route('contacts.index', ['exhibition' => $exhibition, 'open' => 'create'])">Aggiungi contatto</x-dropdown-link>
+                    <x-dropdown-link :href="route('exhibitions.show', ['exhibition' => $exhibition, 'open' => 'create'])">Aggiungi contatto</x-dropdown-link>
                     <x-dropdown-link :href="route('exhibitions.show', $exhibition)">Dettagli</x-dropdown-link>
                     <x-dropdown-link :href="route('exhibitions.edit', $exhibition)">Modifica fiera</x-dropdown-link>
                     @if($publicUrl)
