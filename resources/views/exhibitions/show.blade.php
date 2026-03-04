@@ -179,7 +179,7 @@
                                         </a>
                                     @endif
                                     <button type="button"
-                                            @click='openEdit({{ Illuminate\Support\Js::from(["id" => $contact->id, "first_name" => $contact->first_name, "last_name" => $contact->last_name, "email" => $contact->email, "phone" => $contact->phone, "company" => $contact->company, "note" => $contact->note]) }})'
+                                            @click="openEdit({{ Illuminate\Support\Js::from(['id' => $contact->id, 'first_name' => $contact->first_name, 'last_name' => $contact->last_name, 'email' => $contact->email, 'phone' => $contact->phone, 'company' => $contact->company, 'note' => $contact->note]) }})"
                                             class="btn btn-secondary px-2 py-1 text-xs">
                                         Modifica
                                     </button>
