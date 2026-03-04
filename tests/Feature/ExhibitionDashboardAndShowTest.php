@@ -30,6 +30,8 @@ class ExhibitionDashboardAndShowTest extends TestCase
         $response->assertOk();
         $response->assertSee('Web Summit');
         $response->assertSee(route('exhibitions.show', $exhibition), false);
+        $response->assertSee(route('exhibitions.show', ['exhibition' => $exhibition, 'open' => 'create']), false);
+        $response->assertDontSee(route('exhibitions.contacts.store', $exhibition), false);
         $response->assertSee('Aggiungi contatto');
         $response->assertSee('Dettagli');
         $response->assertSee('Modifica fiera');
