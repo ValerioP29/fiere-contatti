@@ -22,7 +22,7 @@
     }
 
     .app-card {
-        @apply rounded-xl border border-border bg-surface shadow-soft;
+        @apply rounded-xl border border-border/90 bg-white shadow-card;
     }
 
     .app-heading {
@@ -38,7 +38,7 @@
     }
 
     .app-thead {
-        @apply bg-primary/5 text-xs uppercase tracking-wider text-primary;
+        @apply bg-primary/10 text-xs uppercase tracking-wider text-secondary;
     }
 
     .app-th {
@@ -50,7 +50,15 @@
     }
 
     .app-tbody {
-        @apply divide-y divide-border/70 bg-surface;
+        @apply divide-y divide-border/90 bg-white;
+    }
+
+    .app-tbody tr:nth-child(even) {
+        @apply bg-slate-50/70;
+    }
+
+    .app-tbody tr:hover {
+        @apply bg-primary/10;
     }
 
     .btn {
@@ -62,7 +70,7 @@
     }
 
     .btn-secondary {
-        @apply border-border bg-surface text-text hover:border-border hover:bg-slate-50;
+        @apply border-border bg-white text-text hover:border-primary/40 hover:bg-primary/5;
     }
 
     .btn-danger {
@@ -74,7 +82,7 @@
     }
 
     .input {
-        @apply block w-full rounded-lg border border-border bg-surface px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+        @apply block w-full rounded-lg border border-border bg-white px-3 py-2 text-sm text-text placeholder:text-text-muted focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
     }
 
     .badge {
