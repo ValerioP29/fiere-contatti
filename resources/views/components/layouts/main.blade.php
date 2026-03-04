@@ -13,7 +13,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-slate-100 font-sans antialiased text-slate-900">
+<body class="min-h-screen bg-background font-sans antialiased text-text">
 @include('layouts.navigation')
 
 <main class="py-6">

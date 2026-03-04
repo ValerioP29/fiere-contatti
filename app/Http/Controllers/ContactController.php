@@ -30,6 +30,10 @@ class ContactController extends Controller
 
         Contact::create($data);
 
+        if ($request->input('return_to') === 'dashboard') {
+            return redirect()->route('dashboard')->with('status', 'Contatto aggiunto.');
+        }
+
         return redirect()->route('exhibitions.show', $exhibition)->with('status', 'Contatto aggiunto.');
     }
 
@@ -110,7 +114,7 @@ class ContactController extends Controller
         ]);
 
         $headers = ['Fiera', 'Data fiera', 'Nome', 'Cognome', 'Email', 'Telefono', 'Azienda', 'Note', 'Fonte', 'Creato il'];
-        $columnWidths = $this->calculateColumnWidths($headers, $safeRows->all());
+        $columnSettings = $this->calculateColumnSettings($headers, $safeRows->all());
 
         $tmpPath = tempnam(sys_get_temp_dir(), 'contacts-export-');
         $xlsxPath = $tmpPath.'.xlsx';
@@ -118,9 +122,14 @@ class ContactController extends Controller
 
         $writer = new Writer();
         if (method_exists($writer, 'setColumnWidth')) {
-            foreach ($columnWidths as $columnIndex => $columnWidth) {
-                $writer->setColumnWidth($columnWidth, $columnIndex + 1);
+            foreach ($columnSettings as $columnIndex => $columnSetting) {
+                $writer->setColumnWidth($columnSetting['width'], $columnIndex + 1);
             }
+        }
+
+        $noteWrapStyle = $this->makeWrapTextStyle();
+        if ($noteWrapStyle && method_exists($writer, 'setColumnStyle')) {
+            $this->applyColumnStyleIfSupported($writer, $noteWrapStyle, 8);
         }
 
         $writer->openToFile($xlsxPath);
@@ -139,18 +148,78 @@ class ContactController extends Controller
         )->deleteFileAfterSend(true);
     }
 
-    private function calculateColumnWidths(array $headers, array $rows): array
+    private function calculateColumnSettings(array $headers, array $rows): array
     {
-        $widths = array_map(fn (string $header) => min(mb_strlen($header) + 2, 60), $headers);
+        $constraints = [
+            'Fiera' => ['min' => 22, 'max' => 60, 'wrap' => false],
+            'Data fiera' => ['min' => 14, 'max' => 30, 'wrap' => false],
+            'Nome' => ['min' => 14, 'max' => 30, 'wrap' => false],
+            'Cognome' => ['min' => 14, 'max' => 30, 'wrap' => false],
+            'Email' => ['min' => 30, 'max' => 60, 'wrap' => false],
+            'Telefono' => ['min' => 18, 'max' => 30, 'wrap' => false],
+            'Azienda' => ['min' => 24, 'max' => 60, 'wrap' => true],
+            'Note' => ['min' => 40, 'max' => 60, 'wrap' => true],
+            'Fonte' => ['min' => 12, 'max' => 20, 'wrap' => false],
+            'Creato il' => ['min' => 16, 'max' => 24, 'wrap' => false],
+        ];
+
+        $settings = [];
+        foreach ($headers as $header) {
+            $rule = $constraints[$header] ?? ['min' => 12, 'max' => 60, 'wrap' => false];
+            $headerWidth = mb_strlen($header) + 2;
+            $settings[] = [
+                'wrap' => $rule['wrap'],
+                'width' => min(max($headerWidth, $rule['min']), $rule['max']),
+                'min' => $rule['min'],
+                'max' => $rule['max'],
+            ];
+        }
 
         foreach ($rows as $row) {
             foreach (array_values($row) as $columnIndex => $value) {
                 $length = mb_strlen((string) $value);
-                $widths[$columnIndex] = min(max($widths[$columnIndex], $length + 2), 60);
+                $settings[$columnIndex]['width'] = min(
+                    max($settings[$columnIndex]['width'], $length + 2, $settings[$columnIndex]['min']),
+                    $settings[$columnIndex]['max']
+                );
             }
         }
 
-        return $widths;
+        return $settings;
+    }
+
+    private function makeWrapTextStyle(): ?object
+    {
+        $styleBuilderClass = 'OpenSpout\\Common\\Entity\\Style\\StyleBuilder';
+        if (! class_exists($styleBuilderClass)) {
+            return null;
+        }
+
+        $styleBuilder = new $styleBuilderClass();
+
+        if (! method_exists($styleBuilder, 'setShouldWrapText') || ! method_exists($styleBuilder, 'build')) {
+            return null;
+        }
+
+        $styleBuilder->setShouldWrapText(true);
+
+        return $styleBuilder->build();
+    }
+
+    private function applyColumnStyleIfSupported(object $writer, object $style, int $columnIndex): void
+    {
+        $method = new \ReflectionMethod($writer, 'setColumnStyle');
+        $parameterCount = $method->getNumberOfParameters();
+
+        if ($parameterCount >= 3) {
+            $writer->setColumnStyle($style, $columnIndex, $columnIndex);
+
+            return;
+        }
+
+        if ($parameterCount >= 2) {
+            $writer->setColumnStyle($style, $columnIndex);
+        }
     }
 
     private function sanitizeSpreadsheetText(?string $value): string
