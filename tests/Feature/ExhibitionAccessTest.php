@@ -59,7 +59,7 @@ class ExhibitionAccessTest extends TestCase
         $this->assertEquals('2026-03-03', $exhibition->end_date->format('Y-m-d'));
     }
 
-    public function test_user_cannot_open_other_user_contacts(): void
+    public function test_user_cannot_open_other_user_exhibition_show(): void
     {
         $owner = User::factory()->create();
         $other = User::factory()->create();
@@ -71,7 +71,7 @@ class ExhibitionAccessTest extends TestCase
             'company' => 'Other Inc',
         ]);
 
-        $response = $this->actingAs($owner)->get(route('contacts.index', $exhibition));
+        $response = $this->actingAs($owner)->get(route('exhibitions.show', $exhibition));
 
         $response->assertNotFound();
     }
@@ -88,7 +88,7 @@ class ExhibitionAccessTest extends TestCase
             'company' => 'Other Inc',
         ]);
 
-        $response = $this->actingAs($owner)->get(route('contacts.export', $exhibition));
+        $response = $this->actingAs($owner)->get(route('exhibitions.contacts.export', $exhibition));
 
         $response->assertNotFound();
     }
@@ -124,7 +124,7 @@ class ExhibitionAccessTest extends TestCase
             'source' => 'internal',
         ]);
 
-        $response = $this->actingAs($owner)->get(route('contacts.export', $exhibitionA));
+        $response = $this->actingAs($owner)->get(route('exhibitions.contacts.export', $exhibitionA));
 
         $response->assertOk();
         $response->assertHeader('Content-Type', 'application/vnd.ms-excel; charset=UTF-8');

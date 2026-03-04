@@ -14,23 +14,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class ContactController extends Controller
 {
-    public function index(Request $request, Exhibition $exhibition)
-    {
-        $this->ensureOwnership($exhibition);
-
-        $q = trim((string) $request->get('q', ''));
-
-        $contacts = $exhibition->contacts()
-            ->when($q !== '', fn ($query) => $query->search($q))
-            ->orderBy('last_name')
-            ->paginate(30)
-            ->withQueryString();
-
-        $openCreate = $request->string('open')->value() === 'create';
-
-        return view('contacts.index', compact('exhibition', 'contacts', 'q', 'openCreate'));
-    }
-
     public function store(StoreContactRequest $request, Exhibition $exhibition): RedirectResponse
     {
         $this->ensureOwnership($exhibition);
@@ -62,7 +45,7 @@ class ContactController extends Controller
 
         $contact->update($data);
 
-        return redirect()->route('contacts.index', $exhibition)->with('status', 'Contatto aggiornato.');
+        return redirect()->route('exhibitions.show', $exhibition)->with('status', 'Contatto aggiornato.');
     }
 
     public function destroy(Exhibition $exhibition, Contact $contact): RedirectResponse
@@ -73,7 +56,7 @@ class ContactController extends Controller
         $this->deleteStoredFile($contact);
         $contact->delete();
 
-        return redirect()->route('contacts.index', $exhibition)->with('status', 'Contatto eliminato.');
+        return redirect()->route('exhibitions.show', $exhibition)->with('status', 'Contatto eliminato.');
     }
 
     public function downloadFile(Exhibition $exhibition, Contact $contact): BinaryFileResponse
@@ -91,7 +74,7 @@ class ContactController extends Controller
 
         $mime = $contact->file_mime ?? Storage::mimeType($contact->file_path);
         if (! in_array($mime, ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'], true)) {
-            return redirect()->route('contacts.file.download', [$exhibition, $contact]);
+            return redirect()->route('exhibitions.contacts.download', [$exhibition, $contact]);
         }
 
         return response(Storage::get($contact->file_path), 200, [
