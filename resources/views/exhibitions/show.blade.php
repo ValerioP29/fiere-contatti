@@ -204,7 +204,7 @@
         </section>
 
         <div x-show="open" x-cloak class="fixed inset-0 z-40 flex items-center justify-center bg-slate-900/50 p-4" @keydown.escape.window="open = false">
-            <div class="w-full max-w-2xl rounded-xl bg-white p-5 shadow-xl">
+            <div x-cloak class="w-full max-w-2xl rounded-xl bg-white p-5 shadow-xl">
                 <div class="mb-3 flex items-center justify-between">
                     <h3 class="text-lg font-semibold text-slate-900" x-text="contactId ? 'Modifica contatto' : 'Aggiungi contatto'"></h3>
                     <button type="button" @click="open = false" class="text-slate-400 hover:text-slate-600">✕</button>

@@ -6,7 +6,7 @@ Applicazione Laravel per gestire fiere e contatti raccolti allo stand.
 - Area autenticata con CRUD fiere e contatti.
 - Fiera con **data singola** o **range** (`start_date` / `end_date`).
 - Ricerca contatti server-side (nome, cognome, email, telefono, azienda, note).
-- Export Excel `.xls` per i contatti della singola fiera.
+- Export contatti con FastExcel (OpenSpout) in formato reale `.xlsx` per la singola fiera.
 - Form pubblico condivisibile via token ULID, con rate limit sul submit.
 - Upload file contatto con metadati (`file_path`, nome originale, mime, size).
 - Download/preview file consentito solo al proprietario della fiera.
