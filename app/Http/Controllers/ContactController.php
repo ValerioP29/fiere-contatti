@@ -9,9 +9,11 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Rap2hpoutre\FastExcel\FastExcel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use OpenSpout\Common\Entity\Row;
+use OpenSpout\Writer\XLSX\Writer;
 
 class ContactController extends Controller
 {
@@ -60,7 +62,7 @@ class ContactController extends Controller
         return redirect()->route('exhibitions.show', $exhibition)->with('status', 'Contatto eliminato.');
     }
 
-    public function downloadFile(Exhibition $exhibition, Contact $contact): BinaryFileResponse
+    public function downloadFile(Exhibition $exhibition, Contact $contact): StreamedResponse
     {
         $this->ensureOwnership($exhibition);
         $this->guardContactFileAccess($exhibition, $contact);
@@ -96,7 +98,7 @@ class ContactController extends Controller
 
         $safeRows = $rows->map(fn (Contact $contact) => [
             'Fiera' => $this->sanitizeSpreadsheetText($exhibition->name),
-            'Data fiera' => $exhibition->display_date ?? '',
+            'Data fiera' => $this->sanitizeSpreadsheetText($exhibition->display_date),
             'Nome' => $this->sanitizeSpreadsheetText($contact->first_name),
             'Cognome' => $this->sanitizeSpreadsheetText($contact->last_name),
             'Email' => $this->sanitizeSpreadsheetText($contact->email),
@@ -107,7 +109,48 @@ class ContactController extends Controller
             'Creato il' => optional($contact->created_at)->format('Y-m-d H:i') ?? '',
         ]);
 
-        return (new FastExcel($safeRows))->download('contatti_fiera_'.$exhibition->id.'.xlsx');
+        $headers = ['Fiera', 'Data fiera', 'Nome', 'Cognome', 'Email', 'Telefono', 'Azienda', 'Note', 'Fonte', 'Creato il'];
+        $columnWidths = $this->calculateColumnWidths($headers, $safeRows->all());
+
+        $tmpPath = tempnam(sys_get_temp_dir(), 'contacts-export-');
+        $xlsxPath = $tmpPath.'.xlsx';
+        @unlink($tmpPath);
+
+        $writer = new Writer();
+        if (method_exists($writer, 'setColumnWidth')) {
+            foreach ($columnWidths as $columnIndex => $columnWidth) {
+                $writer->setColumnWidth($columnWidth, $columnIndex + 1);
+            }
+        }
+
+        $writer->openToFile($xlsxPath);
+        $writer->addRow(Row::fromValues($headers));
+
+        foreach ($safeRows as $row) {
+            $writer->addRow(Row::fromValues(array_values($row)));
+        }
+
+        $writer->close();
+
+        return response()->download(
+            $xlsxPath,
+            'contatti_fiera_'.$exhibition->id.'.xlsx',
+            ['Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+        )->deleteFileAfterSend(true);
+    }
+
+    private function calculateColumnWidths(array $headers, array $rows): array
+    {
+        $widths = array_map(fn (string $header) => min(mb_strlen($header) + 2, 60), $headers);
+
+        foreach ($rows as $row) {
+            foreach (array_values($row) as $columnIndex => $value) {
+                $length = mb_strlen((string) $value);
+                $widths[$columnIndex] = min(max($widths[$columnIndex], $length + 2), 60);
+            }
+        }
+
+        return $widths;
     }
 
     private function sanitizeSpreadsheetText(?string $value): string
