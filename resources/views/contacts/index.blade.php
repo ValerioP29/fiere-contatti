@@ -1,7 +1,7 @@
 <x-main-layout :title="'Contatti — '.$exhibition->name">
     <div class="app-container py-6"
          x-data="{
-            open: {{ $errors->any() ? 'true' : 'false' }},
+            open: {{ ($errors->any() || ($openCreate ?? false)) ? 'true' : 'false' }},
             submitting: false,
             contactId: null,
             form: { first_name: '', last_name: '', email: '', phone: '', company: '', note: '' },

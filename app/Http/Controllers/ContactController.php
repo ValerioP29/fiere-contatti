@@ -26,7 +26,9 @@ class ContactController extends Controller
             ->paginate(30)
             ->withQueryString();
 
-        return view('contacts.index', compact('exhibition', 'contacts', 'q'));
+        $openCreate = $request->string('open')->value() === 'create';
+
+        return view('contacts.index', compact('exhibition', 'contacts', 'q', 'openCreate'));
     }
 
     public function store(StoreContactRequest $request, Exhibition $exhibition): RedirectResponse
@@ -42,7 +44,7 @@ class ContactController extends Controller
 
         Contact::create($data);
 
-        return redirect()->route('contacts.index', $exhibition)->with('status', 'Contatto creato.');
+        return redirect()->route('exhibitions.show', $exhibition)->with('status', 'Contatto aggiunto.');
     }
 
     public function update(StoreContactRequest $request, Exhibition $exhibition, Contact $contact): RedirectResponse
