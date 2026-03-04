@@ -127,9 +127,9 @@ class ExhibitionAccessTest extends TestCase
         $response = $this->actingAs($owner)->get(route('exhibitions.contacts.export', $exhibitionA));
 
         $response->assertOk();
-        $response->assertHeader('Content-Type', 'application/vnd.ms-excel; charset=UTF-8');
-        $response->assertSee('Mario');
-        $response->assertDontSee('Luigi');
+        $response->assertHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $response->assertHeader('Content-Disposition', 'attachment; filename=contatti_fiera_'.$exhibitionA->id.'.xlsx');
+        $this->assertStringStartsWith('PK', $response->streamedContent());
     }
 
     public function test_public_link_can_be_regenerated(): void

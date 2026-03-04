@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Rap2hpoutre\FastExcel\FastExcel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -93,33 +94,31 @@ class ContactController extends Controller
             ->orderBy('last_name')
             ->get(['first_name', 'last_name', 'email', 'phone', 'company', 'note', 'source', 'created_at']);
 
-        $filename = 'contatti_fiera_'.$exhibition->id.'.xls';
-        $headers = ['Nome', 'Cognome', 'Email', 'Telefono', 'Azienda', 'Note', 'Fonte', 'Creato il'];
-
-        $xml = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>';
-        $xml .= '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">';
-        $xml .= '<Worksheet ss:Name="Contatti"><Table><Row>';
-
-        foreach ($headers as $header) {
-            $xml .= '<Cell><Data ss:Type="String">'.e($header).'</Data></Cell>';
-        }
-
-        $xml .= '</Row>';
-
-        foreach ($rows as $r) {
-            $xml .= '<Row>';
-            foreach ([$r->first_name, $r->last_name, $r->email, $r->phone, $r->company, $r->note, $r->source, optional($r->created_at)->format('Y-m-d H:i')] as $value) {
-                $xml .= '<Cell><Data ss:Type="String">'.e((string) ($value ?? '')).'</Data></Cell>';
-            }
-            $xml .= '</Row>';
-        }
-
-        $xml .= '</Table></Worksheet></Workbook>';
-
-        return response($xml, 200, [
-            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        $safeRows = $rows->map(fn (Contact $contact) => [
+            'Fiera' => $this->sanitizeSpreadsheetText($exhibition->name),
+            'Data fiera' => $exhibition->display_date ?? '',
+            'Nome' => $this->sanitizeSpreadsheetText($contact->first_name),
+            'Cognome' => $this->sanitizeSpreadsheetText($contact->last_name),
+            'Email' => $this->sanitizeSpreadsheetText($contact->email),
+            'Telefono' => $this->sanitizeSpreadsheetText($contact->phone),
+            'Azienda' => $this->sanitizeSpreadsheetText($contact->company),
+            'Note' => $this->sanitizeSpreadsheetText($contact->note),
+            'Fonte' => $this->sanitizeSpreadsheetText($contact->source),
+            'Creato il' => optional($contact->created_at)->format('Y-m-d H:i') ?? '',
         ]);
+
+        return (new FastExcel($safeRows))->download('contatti_fiera_'.$exhibition->id.'.xlsx');
+    }
+
+    private function sanitizeSpreadsheetText(?string $value): string
+    {
+        $cleanValue = $value ?? '';
+
+        if ($cleanValue !== '' && in_array($cleanValue[0], ['=', '+', '-', '@'], true)) {
+            return "'{$cleanValue}";
+        }
+
+        return $cleanValue;
     }
 
     private function extractFileData(StoreContactRequest $request): array
