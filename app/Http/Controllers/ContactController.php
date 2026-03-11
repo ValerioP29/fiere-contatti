@@ -7,7 +7,6 @@ use App\Models\Contact;
 use App\Models\Exhibition;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,12 +18,11 @@ class ContactController extends Controller
 {
     public function store(StoreContactRequest $request, Exhibition $exhibition): RedirectResponse
     {
-        $this->ensureOwnership($exhibition);
-
         $data = $request->validated();
         unset($data['contact_file']);
 
         $data['exhibition_id'] = $exhibition->id;
+        $data['tenant_id'] = $exhibition->tenant_id;
         $data['source'] = 'internal';
         $data = [...$data, ...$this->extractFileData($request)];
 
@@ -39,7 +37,6 @@ class ContactController extends Controller
 
     public function update(StoreContactRequest $request, Exhibition $exhibition, Contact $contact): RedirectResponse
     {
-        $this->ensureOwnership($exhibition);
         abort_if($contact->exhibition_id !== $exhibition->id, 404);
 
         $data = $request->validated();
@@ -57,7 +54,6 @@ class ContactController extends Controller
 
     public function destroy(Exhibition $exhibition, Contact $contact): RedirectResponse
     {
-        $this->ensureOwnership($exhibition);
         abort_if($contact->exhibition_id !== $exhibition->id, 404);
 
         $this->deleteStoredFile($contact);
@@ -68,7 +64,6 @@ class ContactController extends Controller
 
     public function downloadFile(Exhibition $exhibition, Contact $contact): StreamedResponse
     {
-        $this->ensureOwnership($exhibition);
         $this->guardContactFileAccess($exhibition, $contact);
 
         return Storage::download($contact->file_path, $contact->file_original_name ?? basename($contact->file_path));
@@ -76,7 +71,6 @@ class ContactController extends Controller
 
     public function previewFile(Exhibition $exhibition, Contact $contact): Response|BinaryFileResponse
     {
-        $this->ensureOwnership($exhibition);
         $this->guardContactFileAccess($exhibition, $contact);
 
         $mime = $contact->file_mime ?? Storage::mimeType($contact->file_path);
@@ -92,8 +86,6 @@ class ContactController extends Controller
 
     public function exportExcel(Request $request, Exhibition $exhibition): Response
     {
-        $this->ensureOwnership($exhibition);
-
         $q = trim((string) $request->get('q', ''));
         $rows = $exhibition->contacts()
             ->when($q !== '', fn ($query) => $query->search($q))
@@ -259,18 +251,9 @@ class ContactController extends Controller
     private function guardContactFileAccess(Exhibition $exhibition, Contact $contact): void
     {
         abort_if($contact->exhibition_id !== $exhibition->id, 404);
+        abort_if($contact->tenant_id !== $exhibition->tenant_id, 404);
         abort_unless($contact->file_path, 404);
         abort_unless(Storage::exists($contact->file_path), 404);
     }
 
-    private function ensureOwnership(Exhibition $exhibition): void
-    {
-        if ($exhibition->user_id !== auth()->id()) {
-            Log::warning('Tentativo di accesso a contatti non autorizzato', [
-                'user_id' => auth()->id(),
-                'exhibition_id' => $exhibition->id,
-            ]);
-            abort(404);
-        }
-    }
 }

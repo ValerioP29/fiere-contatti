@@ -7,6 +7,7 @@ use App\Http\Controllers\PublicContactController;
 use App\Models\Contact;
 use App\Models\Exhibition;
 use Illuminate\Support\Facades\Route;
+use App\Support\TenantContext;
 
 Route::get('/', function () {
     return auth()->check()
@@ -19,17 +20,17 @@ Route::get('/', function () {
  * Se non la usi, puoi pure toglierla.
  */
 Route::get('/dashboard', function () {
+    $tenantId = app(TenantContext::class)->currentFromRequest(request())->id;
+
     $latestExhibitions = Exhibition::query()
-        ->where('user_id', auth()->id())
+        ->where('tenant_id', $tenantId)
         ->latest()
         ->take(5)
         ->get();
 
     return view('dashboard', [
-        'exhibitionsCount' => Exhibition::query()->where('user_id', auth()->id())->count(),
-        'contactsCount' => Contact::query()
-            ->whereHas('exhibition', fn ($query) => $query->where('user_id', auth()->id()))
-            ->count(),
+        'exhibitionsCount' => Exhibition::query()->where('tenant_id', $tenantId)->count(),
+        'contactsCount' => Contact::query()->where('tenant_id', $tenantId)->count(),
         'latestExhibitions' => $latestExhibitions,
     ]);
 })->middleware(['auth', 'verified', 'ensure.current.tenant'])->name('dashboard');

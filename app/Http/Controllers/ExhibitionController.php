@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use App\Support\TenantContext;
 
 class ExhibitionController extends Controller
 {
@@ -22,8 +23,10 @@ class ExhibitionController extends Controller
 
     public function index(): View
     {
+        $tenantId = app(TenantContext::class)->currentFromRequest(request())?->id;
+
         $exhibitions = Exhibition::query()
-            ->where('user_id', auth()->id())
+            ->where('tenant_id', $tenantId)
             ->latest()
             ->paginate(10);
 
@@ -74,6 +77,7 @@ class ExhibitionController extends Controller
         Exhibition::create([
             ...$this->normalizePayload($request->validated()),
             'user_id' => auth()->id(),
+            'tenant_id' => app(TenantContext::class)->currentFromRequest($request)->id,
             'public_token' => (string) Str::ulid(),
         ]);
 

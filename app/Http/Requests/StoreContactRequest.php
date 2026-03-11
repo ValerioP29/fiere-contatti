@@ -8,7 +8,11 @@ class StoreContactRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return true;
+        if ($this->routeIs('public.store')) {
+            return true;
+        }
+
+        return auth()->check();
     }
 
     public function rules(): array

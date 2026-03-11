@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\Exhibition;
 use App\Models\User;
+use App\Support\TenantContext;
 
 class ExhibitionPolicy
 {
@@ -14,21 +15,28 @@ class ExhibitionPolicy
 
     public function view(User $user, Exhibition $exhibition): bool
     {
-        return $exhibition->user_id === $user->id;
+        return $this->isInCurrentTenant($exhibition);
     }
 
     public function create(User $user): bool
     {
-        return true;
+        return app(TenantContext::class)->currentFromRequest(request()) !== null;
     }
 
     public function update(User $user, Exhibition $exhibition): bool
     {
-        return $exhibition->user_id === $user->id;
+        return $this->isInCurrentTenant($exhibition);
     }
 
     public function delete(User $user, Exhibition $exhibition): bool
     {
-        return $exhibition->user_id === $user->id;
+        return $this->isInCurrentTenant($exhibition);
+    }
+
+    private function isInCurrentTenant(Exhibition $exhibition): bool
+    {
+        $currentTenant = app(TenantContext::class)->currentFromRequest(request());
+
+        return $currentTenant !== null && $exhibition->tenant_id === $currentTenant->id;
     }
 }
