@@ -10,6 +10,7 @@ class Contact extends Model
 {
     protected $fillable = [
         'exhibition_id',
+        'tenant_id',
         'first_name',
         'last_name',
         'email',
@@ -38,5 +39,10 @@ class Contact extends Model
     public function exhibition(): BelongsTo
     {
         return $this->belongsTo(Exhibition::class);
+    }
+
+    public function tenant(): BelongsTo
+    {
+        return $this->belongsTo(Tenant::class);
     }
 }
