@@ -2,13 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Support\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreExhibitionRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return auth()->check() && app(TenantContext::class)->currentFromRequest($this) !== null;
     }
 
     public function rules(): array

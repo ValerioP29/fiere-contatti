@@ -47,4 +47,21 @@ class TenantContext
 
         return $tenant instanceof Tenant ? $tenant : null;
     }
+
+    public function resolveForBinding(Request $request): ?Tenant
+    {
+        $tenantFromAttributes = $this->currentFromRequest($request);
+
+        if ($tenantFromAttributes !== null) {
+            return $tenantFromAttributes;
+        }
+
+        $user = $request->user();
+
+        if (! $user instanceof User || ! $request->hasSession()) {
+            return null;
+        }
+
+        return $this->resolveForUser($user, $request->session());
+    }
 }

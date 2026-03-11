@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\TenantContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -45,4 +46,17 @@ class Contact extends Model
     {
         return $this->belongsTo(Tenant::class);
     }
+
+    public function resolveRouteBinding($value, $field = null): self
+    {
+        $query = $this->newQuery();
+        $currentTenant = app(TenantContext::class)->resolveForBinding(request());
+
+        if ($currentTenant !== null) {
+            $query->where('tenant_id', $currentTenant->id);
+        }
+
+        return $query->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
+    }
 }
+

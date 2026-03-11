@@ -25,6 +25,7 @@ class PublicContactController extends Controller
         unset($data['contact_file']);
 
         $data['exhibition_id'] = $exhibition->id;
+        $data['tenant_id'] = $exhibition->tenant_id;
         $data['source'] = 'public';
 
         if ($request->hasFile('contact_file')) {
