@@ -12,6 +12,15 @@ class PublicContactTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_public_routes_are_not_guarded_by_tenant_context_for_authenticated_users_without_tenants(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get('/p/non-existent-token');
+
+        $response->assertNotFound();
+    }
+
     public function test_public_form_can_store_contact(): void
     {
         $user = User::factory()->create();
