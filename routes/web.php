@@ -32,7 +32,11 @@ Route::get('/dashboard', function () {
             ->count(),
         'latestExhibitions' => $latestExhibitions,
     ]);
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'ensure.current.tenant'])->name('dashboard');
+
+Route::get('/tenant/missing', function () {
+    return response()->view('tenant.missing', status: 403);
+})->middleware('auth')->name('tenant.missing');
 
 /**
  * Profile Breeze (opzionale)
@@ -46,7 +50,7 @@ Route::middleware('auth')->group(function () {
 /**
  * Le TUE rotte protette (CRUD fiere + contatti)
  */
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', 'ensure.current.tenant'])->group(function () {
     Route::resource('exhibitions', ExhibitionController::class);
 
     Route::post('/exhibitions/{exhibition}/public-link', [ExhibitionController::class, 'generatePublicLink'])
