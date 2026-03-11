@@ -34,9 +34,9 @@ class ExhibitionDashboardAndShowTest extends TestCase
         $response->assertDontSee(route('exhibitions.contacts.store', $exhibition), false);
         $response->assertSee('Aggiungi contatto');
         $response->assertSee('Dettagli');
-        $response->assertSee('Modifica fiera');
-        $response->assertSee('Elimina fiera');
-        $response->assertSee('Condividi link');
+        $response->assertSee('Modifica');
+        $response->assertSee('Elimina');
+        $response->assertSee('Condividi');
     }
 
 

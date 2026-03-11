@@ -83,7 +83,7 @@
                         :disabled="!publicUrl"
                         class="btn btn-secondary disabled:cursor-not-allowed disabled:opacity-50">
                     <x-icons.link />
-                    Condividi link form pubblico
+                    Condividi form pubblico
                 </button>
                 <a href="{{ route('exhibitions.edit', $exhibition) }}" class="btn btn-secondary">
                     <x-icons.pencil />

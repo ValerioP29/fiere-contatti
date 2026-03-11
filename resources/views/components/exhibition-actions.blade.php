@@ -33,9 +33,9 @@
 
             <a href="{{ route('exhibitions.edit', $exhibition) }}"
                class="inline-flex items-center gap-1.5 rounded-md border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-medium text-indigo-700 transition hover:bg-indigo-100"
-               aria-label="Modifica fiera">
+               aria-label="Modifica">
                 <x-icons.pencil />
-                <span class="hidden md:inline">Modifica fiera</span>
+                <span class="hidden md:inline">Modifica</span>
             </a>
 
             <form method="POST" action="{{ route('exhibitions.destroy', $exhibition) }}" onsubmit="return confirm('Confermi l\'eliminazione della fiera?')">
@@ -43,9 +43,9 @@
                 @method('DELETE')
                 <button type="submit"
                         class="inline-flex items-center gap-1.5 rounded-md border border-rose-200 bg-rose-50 px-2.5 py-1.5 text-xs font-medium text-rose-700 transition hover:bg-rose-100"
-                        aria-label="Elimina fiera">
+                        aria-label="Elimina">
                     <x-icons.trash />
-                    <span class="hidden md:inline">Elimina fiera</span>
+                    <span class="hidden md:inline">Elimina</span>
                 </button>
             </form>
 
@@ -53,9 +53,9 @@
                     @click="if (!publicUrl) return; navigator.clipboard.writeText(publicUrl).then(() => { copied = true; failed = false; setTimeout(() => copied = false, 1500); }).catch(() => { failed = true; copied = false; setTimeout(() => failed = false, 1500); })"
                     :disabled="!publicUrl"
                     class="inline-flex items-center gap-1.5 rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs font-medium text-sky-700 transition hover:bg-sky-100 disabled:cursor-not-allowed disabled:opacity-50"
-                    aria-label="Condividi link">
+                    aria-label="Condividi">
                 <x-icons.link />
-                <span class="hidden md:inline">Condividi link</span>
+                <span class="hidden md:inline">Condividi</span>
             </button>
         </div>
 

@@ -1,7 +1,7 @@
-<x-main-layout :title="'Modifica fiera: '.$exhibition->name">
+<x-main-layout :title="'Modifica: '.$exhibition->name">
     <div class="app-container max-w-3xl py-6">
         <div class="app-card p-6 sm:p-8">
-            <h1 class="text-2xl font-bold text-slate-900">Modifica fiera</h1>
+            <h1 class="text-2xl font-bold text-slate-900">Modifica</h1>
             <p class="app-subheading">Aggiorna le informazioni della fiera.</p>
 
             @php
