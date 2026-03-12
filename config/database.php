@@ -43,6 +43,24 @@ return [
             'transaction_mode' => 'DEFERRED',
         ],
 
+        'legacy' => [
+            'driver' => env('LEGACY_DB_CONNECTION', 'sqlite'),
+            'url' => env('LEGACY_DB_URL'),
+            'database' => env('LEGACY_DB_DATABASE', database_path('legacy.sqlite')),
+            'host' => env('LEGACY_DB_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('LEGACY_DB_PORT', env('DB_PORT', '3306')),
+            'username' => env('LEGACY_DB_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('LEGACY_DB_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('LEGACY_DB_SOCKET', env('DB_SOCKET', '')),
+            'charset' => env('LEGACY_DB_CHARSET', env('DB_CHARSET', 'utf8mb4')),
+            'collation' => env('LEGACY_DB_COLLATION', env('DB_COLLATION', 'utf8mb4_unicode_ci')),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'foreign_key_constraints' => env('LEGACY_DB_FOREIGN_KEYS', true),
+        ],
+
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
