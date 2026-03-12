@@ -20,12 +20,17 @@ class Exhibition extends Model
         'company',
         'note',
         'public_token',
+        'legacy_source',
+        'legacy_id',
+        'legacy_updated_at',
+        'import_batch_id',
     ];
 
     protected $casts = [
         'date' => 'date',
         'start_date' => 'date',
         'end_date' => 'date',
+        'legacy_updated_at' => 'datetime',
     ];
 
     protected function displayDate(): Attribute
@@ -53,6 +58,11 @@ class Exhibition extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    public function importBatch(): BelongsTo
+    {
+        return $this->belongsTo(ImportBatch::class);
     }
 
     public function contacts(): HasMany
