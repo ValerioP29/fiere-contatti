@@ -23,6 +23,14 @@ class Contact extends Model
         'file_mime',
         'file_size',
         'source',
+        'legacy_source',
+        'legacy_id',
+        'legacy_updated_at',
+        'import_batch_id',
+    ];
+
+    protected $casts = [
+        'legacy_updated_at' => 'datetime',
     ];
 
     public function scopeSearch(Builder $query, string $q): Builder
@@ -47,6 +55,11 @@ class Contact extends Model
         return $this->belongsTo(Tenant::class);
     }
 
+    public function importBatch(): BelongsTo
+    {
+        return $this->belongsTo(ImportBatch::class);
+    }
+
     public function resolveRouteBinding($value, $field = null): self
     {
         $query = $this->newQuery();
@@ -59,4 +72,3 @@ class Contact extends Model
         return $query->where($field ?? $this->getRouteKeyName(), $value)->firstOrFail();
     }
 }
-
