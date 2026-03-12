@@ -70,6 +70,23 @@ class TenantContextTest extends TestCase
         $response->assertRedirect(route('tenant.missing'));
     }
 
+    public function test_existing_user_without_tenant_can_still_login_and_hits_explicit_missing_tenant_flow(): void
+    {
+        $user = User::factory()->create();
+
+        $loginResponse = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
+        $loginResponse->assertRedirect(route('dashboard', absolute: false));
+
+        $dashboardResponse = $this->get(route('dashboard'));
+
+        $dashboardResponse->assertRedirect(route('tenant.missing'));
+    }
+
     public function test_missing_tenant_page_is_accessible_with_authentication_without_loop(): void
     {
         $user = User::factory()->create();
